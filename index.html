@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basketball Quiz Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+        #background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image: url('https://iili.io/d2vlrbI.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        #quiz-container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 66vw;
+            height: 66vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        h1 {
+            color: purple;
+            font-size: 3vw;
+            margin-bottom: 20px;
+            font-family: 'Merriweather', serif;
+        }
+        #question {
+            font-size: 2vw;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-family: 'Merriweather', serif;
+        }
+        #options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        button {
+            margin: 5px;
+            padding: 15px 30px;
+            cursor: pointer;
+            font-size: 1.5vw;
+            background-color: orange;
+            border: 2px solid black;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+            min-width: 200px;
+        }
+        button:hover, button:focus {
+            background-color: #ffa500;
+            outline: none;
+        }
+        button::before {
+            content: attr(data-key) ") ";
+            font-weight: bold;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 2vw;
+        }
+        #animation {
+            width: 200px;
+            height: 200px;
+            margin: 20px auto;
+            position: relative;
+        }
+        .basketball {
+            width: 50px;
+            height: 50px;
+            background-color: #ff7f00;
+            border-radius: 50%;
+            position: absolute;
+            bottom: 0;
+            left: 75px;
+            box-shadow: inset -10px -10px 15px rgba(0,0,0,0.3);
+            overflow: hidden;
+            z-index: 2;
+            transition: all 1s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+        .basketball::before, .basketball::after {
+            content: '';
+            position: absolute;
+            background-color: black;
+        }
+        .basketball::before {
+            width: 50px;
+            height: 2px;
+            top: 25px;
+            left: 0;
+        }
+        .basketball::after {
+            width: 2px;
+            height: 50px;
+            top: 0;
+            left: 25px;
+        }
+        .hoop {
+            width: 100px;
+            height: 5px;
+            background-color: red;
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            z-index: 3;
+        }
+        .net {
+            width: 90px;
+            height: 60px;
+            border: 2px solid #ccc;
+            border-top: none;
+            border-radius: 0 0 50% 50%;
+            position: absolute;
+            top: 55px;
+            left: 55px;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 5px,
+                #eee 5px,
+                #eee 10px
+            );
+            z-index: 1;
+            transition: transform 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="background"></div>
+    <div id="quiz-container">
+        <h1>Basketball Quiz Game</h1>
+        <div id="question"></div>
+        <div id="options"></div>
+        <div id="result"></div>
+        <div id="animation">
+            <div class="hoop"></div>
+            <div class="net"></div>
+            <div class="basketball"></div>
+        </div>
+    </div>
+    <script>
+                const questions = [
+            {
+                question: "What is the diameter of a basketball hoop?",
+                options: ["16 inches", "18 inches", "20 inches", "22 inches"],
+                answer: 1
+            },
+            {
+                question: "How many players are on the court for each team in a standard basketball game?",
+                options: ["4", "5", "6", "7"],
+                answer: 1
+            },
+            {
+                question: "Which NBA player is known as 'The Greek Freak'?",
+                options: ["LeBron James", "Kevin Durant", "Giannis Antetokounmpo", "Stephen Curry"],
+                answer: 2
+            },
+            {
+                question: "How long is a standard NBA game?",
+                options: ["36 minutes", "40 minutes", "44 minutes", "48 minutes"],
+                answer: 3
+            }
+        ];
+
+        let currentQuestion = 0;
+
+        function displayQuestion() {
+            const questionEl = document.getElementById("question");
+            const optionsEl = document.getElementById("options");
+            const resultEl = document.getElementById("result");
+
+            questionEl.textContent = questions[currentQuestion].question;
+            optionsEl.innerHTML = "";
+            resultEl.textContent = "";
+
+            const keys = ['A', 'B', 'C', 'D'];
+            questions[currentQuestion].options.forEach((option, index) => {
+                const button = document.createElement("button");
+                button.textContent = option;
+                button.setAttribute('data-key', keys[index]);
+                button.onclick = () => checkAnswer(index);
+                optionsEl.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selectedIndex) {
+            const resultEl = document.getElementById("result");
+            const basketball = document.querySelector(".basketball");
+
+            if (selectedIndex === questions[currentQuestion].answer) {
+                resultEl.textContent = "Correct!";
+                animateBasket(true);
+            } else {
+                resultEl.textContent = "Incorrect. Try again!";
+                animateBasket(false);
+            }
+
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                setTimeout(displayQuestion, 2000);
+            } else {
+                setTimeout(() => {
+                    alert("Quiz completed! Refresh the page to start over.");
+                }, 2000);
+            }
+        }
+
+        function animateBasket(correct) {
+            const basketball = document.querySelector(".basketball");
+            const net = document.querySelector(".net");
+            const hoop = document.querySelector(".hoop");
+
+            if (correct) {
+                // Move ball up and in front of the hoop
+                basketball.style.bottom = '150px';
+                basketball.style.zIndex = '4';
+                
+                setTimeout(() => {
+                    // Move ball down and behind the hoop
+                    basketball.style.bottom = '55px';
+                    basketball.style.zIndex = '1';
+                    net.style.transform = 'scaleY(1.1)';
+                    
+                    setTimeout(() => {
+                        // Complete the animation
+                        basketball.style.bottom = '0';
+                        basketball.style.zIndex = '2';
+                        net.style.transform = 'scaleY(1)';
+                    }, 300);
+                }, 500);
+            } else {
+                basketball.style.bottom = '100px';
+                basketball.style.left = '125px';
+                
+                setTimeout(() => {
+                    basketball.style.bottom = '0';
+                    basketball.style.left = '75px';
+                }, 500);
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            const key = event.key.toUpperCase();
+            if (['A', 'B', 'C', 'D'].includes(key)) {
+                const index = ['A', 'B', 'C', 'D'].indexOf(key);
+                const buttons = document.querySelectorAll('button');
+                if (buttons[index]) {
+                    buttons[index].click();
+                }
+            }
+        });
+
+        displayQuestion();
+    </script>
+</body>
+</html>
